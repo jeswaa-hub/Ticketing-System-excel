@@ -2,6 +2,53 @@ window.APP_CONFIG = window.APP_CONFIG || {};
 window.APP_CONFIG.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyMTRZJHjIsjJOlRQYM_cek9cGvDLBe8v018aBXwl2UoptVRVs6pbwwvvdBx_isCTv9/exec';
 window.APP_CONFIG.ADMIN_TOKEN = '1BEdnvsuY5_FXVGpxyfU6r15RnQeio6hTtjj5DG0Vz8KGh0qQfBeQP8HY';
 
+window.TICKETING_CACHE = window.TICKETING_CACHE || (function() {
+  const DATA_KEY = 'ticketing:tickets:data:v1';
+  const TS_KEY = 'ticketing:tickets:ts:v1';
+
+  const safeParse = (raw) => {
+    try { return JSON.parse(raw); } catch (e) { return null; }
+  };
+
+  const getTickets = () => {
+    try {
+      const raw = sessionStorage.getItem(DATA_KEY);
+      if (!raw) return null;
+      const parsed = safeParse(raw);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const setTickets = (tickets) => {
+    if (!Array.isArray(tickets)) return;
+    try {
+      sessionStorage.setItem(DATA_KEY, JSON.stringify(tickets));
+      sessionStorage.setItem(TS_KEY, String(Date.now()));
+    } catch (e) {}
+  };
+
+  const clearTickets = () => {
+    try {
+      sessionStorage.removeItem(DATA_KEY);
+      sessionStorage.removeItem(TS_KEY);
+    } catch (e) {}
+  };
+
+  const getLastSync = () => {
+    try {
+      const raw = sessionStorage.getItem(TS_KEY);
+      const n = raw ? Number(raw) : 0;
+      return Number.isFinite(n) ? n : 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
+  return { getTickets, setTickets, clearTickets, getLastSync };
+})();
+
 document.addEventListener('DOMContentLoaded', function() {
   // Get the form element
   var form = document.getElementById('ticketForm');

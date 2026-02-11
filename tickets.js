@@ -45,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize UI
-    showSyncModal();
     fetchTickets();
     setupEditModal();
     setupCreateModal();
@@ -80,6 +79,15 @@ function hideSyncModal() {
 }
 
 function fetchTickets(manual = false) {
+    if (!manual && window.TICKETING_CACHE && typeof window.TICKETING_CACHE.getTickets === 'function') {
+        const cachedTickets = window.TICKETING_CACHE.getTickets();
+        if (cachedTickets) {
+            allTickets = cachedTickets;
+            renderTable(allTickets);
+            return;
+        }
+    }
+
     const tableBody = document.getElementById('ticketsTableBody');
     const refreshBtn = document.getElementById('refreshBtn');
     let icon = null;
@@ -108,6 +116,9 @@ function fetchTickets(manual = false) {
     .then(data => {
         if (data.status === 'success') {
             allTickets = data.data;
+            if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.setTickets === 'function') {
+                window.TICKETING_CACHE.setTickets(allTickets);
+            }
             renderTable(allTickets);
             if (manual) showNotification('Data synced successfully.', 'success');
         } else {
@@ -252,7 +263,10 @@ function saveTicket() {
         if (data.status === 'success') {
             showNotification('Ticket updated successfully!', 'success');
             closeEditModal();
-            fetchTickets(); // Refresh list
+            if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.clearTickets === 'function') {
+                window.TICKETING_CACHE.clearTickets();
+            }
+            fetchTickets(true);
         } else {
             showNotification('Error updating ticket: ' + data.message, 'error');
         }
@@ -281,6 +295,14 @@ function setupCreateModal() {
 
 function openCreateModal() {
     document.getElementById('createForm').reset();
+    const dept = document.getElementById('createDepartment');
+    const prio = document.getElementById('createPriority');
+    const cat = document.getElementById('createCategory');
+    const type = document.getElementById('createTicketType');
+    if (dept) dept.value = '';
+    if (prio) prio.value = '';
+    if (cat) cat.value = '';
+    if (type) type.value = '';
     document.getElementById('createModal').style.display = 'flex';
 }
 
@@ -289,6 +311,15 @@ function closeCreateModal() {
 }
 
 function createTicket() {
+    const formEl = document.getElementById('createForm');
+    if (formEl) {
+        if (typeof formEl.reportValidity === 'function') {
+            if (!formEl.reportValidity()) return;
+        } else if (typeof formEl.checkValidity === 'function') {
+            if (!formEl.checkValidity()) return;
+        }
+    }
+
     const saveBtn = document.getElementById('createSaveBtn');
     const originalText = saveBtn.textContent;
     saveBtn.textContent = 'Creating...';
@@ -315,7 +346,10 @@ function createTicket() {
         if (data.status === 'success') {
             showNotification('Ticket created successfully!', 'success');
             closeCreateModal();
-            fetchTickets(); // Refresh list
+            if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.clearTickets === 'function') {
+                window.TICKETING_CACHE.clearTickets();
+            }
+            fetchTickets(true);
         } else {
             showNotification('Error creating ticket: ' + data.message, 'error');
         }
@@ -369,7 +403,10 @@ function confirmDelete() {
         if (data.status === 'success') {
             showNotification('Ticket deleted successfully.', 'success');
             closeDeleteModal();
-            fetchTickets(); // Refresh list
+            if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.clearTickets === 'function') {
+                window.TICKETING_CACHE.clearTickets();
+            }
+            fetchTickets(true);
         } else {
             showNotification('Error deleting ticket: ' + data.message, 'error');
         }

@@ -83,6 +83,14 @@ function hideSyncModal() {
 }
 
 function fetchTickets(manual = false) {
+    if (!manual && window.TICKETING_CACHE && typeof window.TICKETING_CACHE.getTickets === 'function') {
+        const cachedTickets = window.TICKETING_CACHE.getTickets();
+        if (cachedTickets) {
+            renderDashboard(cachedTickets);
+            return;
+        }
+    }
+
     const tableBody = document.getElementById('ticketTableBody');
     const refreshBtn = document.getElementById('refreshBtn');
     let icon = null;
@@ -108,6 +116,9 @@ function fetchTickets(manual = false) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
+            if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.setTickets === 'function') {
+                window.TICKETING_CACHE.setTickets(data.data);
+            }
             renderDashboard(data.data);
             if (manual) showNotification('Dashboard synced successfully.', 'success');
         } else {
