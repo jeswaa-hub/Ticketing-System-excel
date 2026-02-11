@@ -1,0 +1,51 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Get the form element
+  var form = document.getElementById('ticketForm');
+  
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Collect form data
+      var formData = {
+        email: document.getElementById('email').value,
+        issue: document.getElementById('issue').value
+      };
+      
+      // Show loading state
+      var submitBtn = document.getElementById('submitBtn');
+      var originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Submitting...';
+      submitBtn.disabled = true;
+      
+      // Call the backend function
+      google.script.run
+        .withSuccessHandler(function(response) {
+          // Handle success
+          console.log('Success:', response);
+          if (response.status === 'success') {
+            alert(response.message);
+            form.reset();
+          } else {
+            alert('Error: ' + response.message);
+          }
+          
+          // Reset button
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        })
+        .withFailureHandler(function(error) {
+          // Handle error
+          console.error('Error:', error);
+          alert('An error occurred: ' + error.message);
+          
+          // Reset button
+          submitBtn.textContent = originalText;
+          submitBtn.disabled = false;
+        })
+        .submitTicket(formData);
+    });
+  }
+});
+</script>

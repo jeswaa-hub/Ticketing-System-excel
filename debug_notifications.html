@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Debugger</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="notifications.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 6px;
+            border: none;
+            color: white;
+        }
+        .btn-success { background-color: #10b981; }
+        .btn-error { background-color: #ef4444; }
+        .btn-warning { background-color: #f59e0b; }
+        .btn-info { background-color: #2563eb; }
+    </style>
+</head>
+<body>
+
+    <h1>Notification System Test</h1>
+    <p>Click the buttons below to test the notification system.</p>
+
+    <button class="btn-success" onclick="testSuccess()">Test Success</button>
+    <button class="btn-error" onclick="testError()">Test Error</button>
+    <button class="btn-warning" onclick="testWarning()">Test Warning</button>
+    <button class="btn-info" onclick="testInfo()">Test Info</button>
+
+    <div id="log" style="margin-top: 20px; padding: 10px; background: #f0f0f0; width: 100%;">
+        <strong>Log:</strong>
+    </div>
+
+    <script src="notifications.js"></script>
+    <script>
+        function log(msg) {
+            const div = document.createElement('div');
+            div.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+            document.getElementById('log').appendChild(div);
+        }
+
+        // Override console.log to see it on screen
+        const originalLog = console.log;
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            log(args.join(' '));
+        };
+
+        function testSuccess() {
+            log('Calling showNotification success...');
+            try {
+                showNotification('Operation completed successfully!', 'success');
+            } catch(e) {
+                log('Error: ' + e.message);
+            }
+        }
+
+        function testError() {
+            log('Calling showNotification error...');
+            showNotification('Something went wrong.', 'error');
+        }
+
+        function testWarning() {
+            log('Calling showNotification warning...');
+            showNotification('Please check your input.', 'warning');
+        }
+
+        function testInfo() {
+            log('Calling showNotification info...');
+            showNotification('Here is some useful information.', 'info');
+        }
+    </script>
+</body>
+</html>
