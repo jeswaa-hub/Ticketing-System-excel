@@ -684,11 +684,11 @@ function renderTable(tickets) {
         if (s === 'closed' || s === 'resolved') statusClass = 'status-closed';
 
         row.innerHTML = `
-            <td>${ticket.id || 'N/A'}</td>
-            <td>${ticket.subject || 'No Subject'}</td>
-            <td>${ticket.requesterName || 'Unknown'}</td>
-            <td>${dateStr}</td>
-            <td>
+            <td class="py-5 px-4 font-semibold text-gray-700 dark:text-gray-200">${ticket.id || 'N/A'}</td>
+            <td class="py-5 px-4">${ticket.subject || 'No Subject'}</td>
+            <td class="py-5 px-4">${ticket.requesterName || 'Unknown'}</td>
+            <td class="py-5 px-4 text-center">${dateStr}</td>
+            <td class="py-5 px-4 text-center">
                 <span class="status-badge ${statusClass}">${ticket.status}</span>
             </td>
         `;

@@ -165,18 +165,18 @@ function renderTable(tickets) {
         } catch(e) {}
 
         row.innerHTML = `
-            <td><strong>${ticket.id}</strong></td>
-            <td>${ticket.subject}</td>
-            <td>${ticket.requesterName}</td>
-            <td><span class="status-badge status-${ticket.status.toLowerCase().replace(' ', '-')}">${ticket.status}</span></td>
-            <td>${ticket.priority}</td>
-            <td>${dateStr}</td>
-            <td>
-                <button class="action-btn btn-edit" onclick="openEditModal('${ticket.id}')">
-                    <i class="fas fa-edit"></i>
+            <td class="py-5 px-4 font-semibold text-gray-700 dark:text-gray-200">${ticket.id}</td>
+            <td class="py-5 px-4">${ticket.subject}</td>
+            <td class="py-5 px-4">${ticket.requesterName}</td>
+            <td class="py-5 px-4 text-center"><span class="status-badge status-${ticket.status.toLowerCase().replace(' ', '-')}">${ticket.status}</span></td>
+            <td class="py-5 px-4 text-center font-medium">${ticket.priority}</td>
+            <td class="py-5 px-4 text-center">${dateStr}</td>
+            <td class="py-5 px-4 text-center whitespace-nowrap">
+                <button class="action-btn btn-edit mx-1" onclick="openEditModal('${ticket.id}')" title="Edit">
+                    <i class="fas fa-edit text-lg"></i>
                 </button>
-                <button class="action-btn btn-delete" onclick="openDeleteModal('${ticket.id}')">
-                    <i class="fas fa-trash"></i>
+                <button class="action-btn btn-delete mx-1" onclick="openDeleteModal('${ticket.id}')" title="Delete">
+                    <i class="fas fa-trash text-lg"></i>
                 </button>
             </td>
         `;
