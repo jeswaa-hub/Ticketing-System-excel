@@ -56,18 +56,122 @@ document.addEventListener('DOMContentLoaded', function() {
   var SCRIPT_URL = window.APP_CONFIG && window.APP_CONFIG.SCRIPT_URL ? window.APP_CONFIG.SCRIPT_URL : '';
   
   if (form) {
+    // --- Auto-Category Logic ---
+    const subjectSelect = document.getElementById('subject');
+    const categorySelect = document.getElementById('category');
+
+    const subjectToCategoryMap = {
+      'Hardware Repair/Issue': 'Hardware',
+      'Software Installation/Issue': 'Software',
+      'Network/Wi-Fi Connectivity': 'Network',
+      'Account/Password Access': 'Access/Login',
+      'Email Configuration/Issue': 'Access/Login',
+      'Printer/Peripheral Issue': 'Hardware',
+      'System Access Request': 'Access/Login',
+      'General Inquiry/Others': 'Others'
+    };
+
+    if (subjectSelect && categorySelect) {
+      subjectSelect.addEventListener('change', function() {
+        const selectedSubject = subjectSelect.value;
+        
+        // Show/Hide Other Subject input
+        const subjectOther = document.getElementById('subjectOther');
+        if (subjectOther) {
+          if (selectedSubject === 'General Inquiry/Others') {
+            subjectOther.classList.remove('hidden');
+            subjectOther.required = true;
+          } else {
+            subjectOther.classList.add('hidden');
+            subjectOther.required = false;
+            subjectOther.value = '';
+          }
+        }
+
+        const mappedCategory = subjectToCategoryMap[selectedSubject];
+        if (mappedCategory) {
+          categorySelect.value = mappedCategory;
+          // Trigger change event for category to show/hide its "Other" field
+          categorySelect.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+
+    // Show/Hide Other Category input
+    if (categorySelect) {
+      categorySelect.addEventListener('change', function() {
+        const categoryOther = document.getElementById('categoryOther');
+        if (categoryOther) {
+          if (categorySelect.value === 'Others') {
+            categoryOther.classList.remove('hidden');
+            categoryOther.required = true;
+          } else {
+            categoryOther.classList.add('hidden');
+            categoryOther.required = false;
+            categoryOther.value = '';
+          }
+        }
+      });
+    }
+
+    // Show/Hide Other Department input
+    const departmentSelect = document.getElementById('department');
+    if (departmentSelect) {
+      departmentSelect.addEventListener('change', function() {
+        const departmentOther = document.getElementById('departmentOther');
+        if (departmentOther) {
+          if (departmentSelect.value === 'Others') {
+            departmentOther.classList.remove('hidden');
+            departmentOther.required = true;
+          } else {
+            departmentOther.classList.add('hidden');
+            departmentOther.required = false;
+            departmentOther.value = '';
+          }
+        }
+      });
+    }
+
+    // Show/Hide Other Ticket Type input
+    const ticketTypeSelect = document.getElementById('ticketType');
+    if (ticketTypeSelect) {
+      ticketTypeSelect.addEventListener('change', function() {
+        const ticketTypeOther = document.getElementById('ticketTypeOther');
+        if (ticketTypeOther) {
+          if (ticketTypeSelect.value === 'Others') {
+            ticketTypeOther.classList.remove('hidden');
+            ticketTypeOther.required = true;
+          } else {
+            ticketTypeOther.classList.add('hidden');
+            ticketTypeOther.required = false;
+            ticketTypeOther.value = '';
+          }
+        }
+      });
+    }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       
+      // Helper function to get value (dropdown or text input if 'Others' is selected)
+      const getValue = (selectId, otherId) => {
+        const select = document.getElementById(selectId);
+        const other = document.getElementById(otherId);
+        if (select && (select.value === 'Others' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
+          return other.value.trim();
+        }
+        return select ? select.value : '';
+      };
+
       // Collect form data
       var formData = {
         requesterName: document.getElementById('requesterName').value,
         email: document.getElementById('email').value,
-        department: document.getElementById('department').value,
-        subject: document.getElementById('subject').value,
-        category: document.getElementById('category').value,
+        department: getValue('department', 'departmentOther'),
+        subject: getValue('subject', 'subjectOther'),
+        category: getValue('category', 'categoryOther'),
         priority: document.getElementById('priority').value,
-        ticketType: document.getElementById('ticketType').value,
+        ticketType: getValue('ticketType', 'ticketTypeOther'),
         description: document.getElementById('description').value
       };
       

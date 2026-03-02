@@ -2,6 +2,17 @@
 
 const SCRIPT_URL = window.APP_CONFIG && window.APP_CONFIG.SCRIPT_URL ? window.APP_CONFIG.SCRIPT_URL : 'https://script.google.com/macros/s/AKfycbyMTRZJHjIsjJOlRQYM_cek9cGvDLBe8v018aBXwl2UoptVRVs6pbwwvvdBx_isCTv9/exec';
 
+const subjectToCategoryMap = {
+    'Hardware Repair/Issue': 'Hardware',
+    'Software Installation/Issue': 'Software',
+    'Network/Wi-Fi Connectivity': 'Network',
+    'Account/Password Access': 'Access/Login',
+    'Email Configuration/Issue': 'Access/Login',
+    'Printer/Peripheral Issue': 'Hardware',
+    'System Access Request': 'Access/Login',
+    'General Inquiry/Others': 'Others'
+};
+
 (function() {
     try {
         const storedTheme = localStorage.getItem('theme');
@@ -49,10 +60,56 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEditModal();
     setupCreateModal();
     setupRefresh();
+    setupFilters();
+
+    // Logout functionality
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            sessionStorage.removeItem('adminAuthenticated');
+            window.location.href = 'index.html';
+        });
+    }
 });
 
 let allTickets = []; // Store fetched tickets
+let filteredTickets = []; // Store filtered results
 let ticketIdToDelete = null; // Store ID for deletion
+
+// --- Filtering Logic ---
+function setupFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
+
+    const handleFilter = () => {
+        applyFilters();
+    };
+
+    if (searchInput) searchInput.addEventListener('input', handleFilter);
+    if (statusFilter) statusFilter.addEventListener('change', handleFilter);
+    if (priorityFilter) priorityFilter.addEventListener('change', handleFilter);
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+    const statusTerm = document.getElementById('statusFilter')?.value || '';
+    const priorityTerm = document.getElementById('priorityFilter')?.value || '';
+
+    filteredTickets = allTickets.filter(ticket => {
+        const matchesSearch = !searchTerm || 
+            ticket.id.toLowerCase().includes(searchTerm) ||
+            ticket.subject.toLowerCase().includes(searchTerm) ||
+            ticket.requesterName.toLowerCase().includes(searchTerm);
+        
+        const matchesStatus = !statusTerm || ticket.status === statusTerm;
+        const matchesPriority = !priorityTerm || ticket.priority === priorityTerm;
+
+        return matchesSearch && matchesStatus && matchesPriority;
+    });
+
+    renderTable(filteredTickets);
+}
 
 function setupRefresh() {
     const refreshBtn = document.getElementById('refreshBtn');
@@ -83,7 +140,7 @@ function fetchTickets(manual = false) {
         const cachedTickets = window.TICKETING_CACHE.getTickets();
         if (cachedTickets) {
             allTickets = cachedTickets;
-            renderTable(allTickets);
+            applyFilters();
             return;
         }
     }
@@ -119,7 +176,7 @@ function fetchTickets(manual = false) {
             if (window.TICKETING_CACHE && typeof window.TICKETING_CACHE.setTickets === 'function') {
                 window.TICKETING_CACHE.setTickets(allTickets);
             }
-            renderTable(allTickets);
+            applyFilters(); // Apply filters to new data
             if (manual) showNotification('Data synced successfully.', 'success');
         } else {
             console.error('Error fetching tickets:', data.message);
@@ -147,12 +204,19 @@ function fetchTickets(manual = false) {
 
 function renderTable(tickets) {
     const tableBody = document.getElementById('ticketsTableBody');
+    const noResults = document.getElementById('noResultsRow');
     tableBody.innerHTML = '';
 
     if (tickets.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">No tickets found.</td></tr>';
+        if (noResults) {
+            noResults.classList.remove('hidden');
+        } else {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">No tickets found.</td></tr>';
+        }
         return;
     }
+
+    if (noResults) noResults.classList.add('hidden');
 
     tickets.forEach(ticket => {
         const row = document.createElement('tr');
@@ -192,6 +256,70 @@ function setupEditModal() {
             e.preventDefault();
             saveTicket();
         };
+
+        // --- Auto-Category Logic for Edit Modal ---
+        const subjectSelect = document.getElementById('editSubject');
+        const categorySelect = document.getElementById('editCategory');
+        
+        if (subjectSelect && categorySelect) {
+            subjectSelect.addEventListener('change', function() {
+                const selectedSubject = subjectSelect.value;
+                
+                // Show/Hide Other Subject input
+                const subjectOther = document.getElementById('editSubjectOther');
+                if (subjectOther) {
+                    if (selectedSubject === 'General Inquiry/Others') {
+                        subjectOther.classList.remove('hidden');
+                        subjectOther.required = true;
+                    } else {
+                        subjectOther.classList.add('hidden');
+                        subjectOther.required = false;
+                        subjectOther.value = '';
+                    }
+                }
+
+                const mappedCategory = subjectToCategoryMap[selectedSubject];
+                if (mappedCategory) {
+                    categorySelect.value = (mappedCategory === 'Others' ? 'Other' : mappedCategory);
+                    categorySelect.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        // Show/Hide Other Category input
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function() {
+                const categoryOther = document.getElementById('editCategoryOther');
+                if (categoryOther) {
+                    if (categorySelect.value === 'Other') {
+                        categoryOther.classList.remove('hidden');
+                        categoryOther.required = true;
+                    } else {
+                        categoryOther.classList.add('hidden');
+                        categoryOther.required = false;
+                        categoryOther.value = '';
+                    }
+                }
+            });
+        }
+
+        // Show/Hide Other Ticket Type input
+        const typeSelect = document.getElementById('editTicketType');
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function() {
+                const typeOther = document.getElementById('editTicketTypeOther');
+                if (typeOther) {
+                    if (typeSelect.value === 'Other') {
+                        typeOther.classList.remove('hidden');
+                        typeOther.required = true;
+                    } else {
+                        typeOther.classList.add('hidden');
+                        typeOther.required = false;
+                        typeOther.value = '';
+                    }
+                }
+            });
+        }
     }
 
     // Fix: Attach event listeners for Cancel and Close buttons
@@ -215,14 +343,45 @@ function openEditModal(id) {
 
     // Populate fields
     document.getElementById('editId').value = ticket.id;
-    document.getElementById('editSubject').value = ticket.subject || '';
+    
+    // Helper to set select and handle 'Other'
+    const setSelectValue = (selectId, otherId, value, options) => {
+        const select = document.getElementById(selectId);
+        const other = document.getElementById(otherId);
+        if (!select) return;
+
+        if (options.includes(value)) {
+            select.value = value;
+            if (other) {
+                other.classList.add('hidden');
+                other.value = '';
+            }
+        } else if (value) {
+            // If value is not in options, set to 'Others' and show text input
+            const otherValue = selectId.includes('Subject') ? 'General Inquiry/Others' : 'Other';
+            select.value = otherValue;
+            if (other) {
+                other.classList.remove('hidden');
+                other.value = value;
+            }
+        }
+    };
+
+    const subjectOptions = Array.from(document.getElementById('editSubject').options).map(o => o.value);
+    const categoryOptions = Array.from(document.getElementById('editCategory').options).map(o => o.value);
+
+    setSelectValue('editSubject', 'editSubjectOther', ticket.subject, subjectOptions);
+    setSelectValue('editCategory', 'editCategoryOther', ticket.category, categoryOptions);
+    
+    const typeOptions = Array.from(document.getElementById('editTicketType').options).map(o => o.value);
+    setSelectValue('editTicketType', 'editTicketTypeOther', ticket.ticketType, typeOptions);
+
     document.getElementById('editDescription').value = ticket.description || '';
     document.getElementById('editRequester').value = ticket.requesterName || '';
     document.getElementById('editAssignedTo').value = ticket.assignedTo || '';
     document.getElementById('editDepartment').value = ticket.department || 'IT';
     document.getElementById('editStatus').value = ticket.status || 'Pending';
     document.getElementById('editPriority').value = ticket.priority || 'Low';
-    document.getElementById('editCategory').value = ticket.category || 'Other';
     document.getElementById('editTicketType').value = ticket.ticketType || 'Incident';
 
     // Show modal
@@ -240,18 +399,28 @@ function saveTicket() {
     saveBtn.disabled = true;
     showSyncModal(); // Show sync modal
 
+    // Helper function to get value (dropdown or text input if 'Others' is selected)
+    const getValue = (selectId, otherId) => {
+        const select = document.getElementById(selectId);
+        const other = document.getElementById(otherId);
+        if (select && (select.value === 'Other' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
+            return other.value.trim();
+        }
+        return select ? select.value : '';
+    };
+
     const formData = {
         action: 'updateTicket',
         id: document.getElementById('editId').value,
-        subject: document.getElementById('editSubject').value,
+        subject: getValue('editSubject', 'editSubjectOther'),
         description: document.getElementById('editDescription').value,
         requesterName: document.getElementById('editRequester').value,
         assignedTo: document.getElementById('editAssignedTo').value,
         department: document.getElementById('editDepartment').value,
         status: document.getElementById('editStatus').value,
         priority: document.getElementById('editPriority').value,
-        category: document.getElementById('editCategory').value,
-        ticketType: document.getElementById('editTicketType').value
+        category: getValue('editCategory', 'editCategoryOther'),
+        ticketType: getValue('editTicketType', 'editTicketTypeOther')
     };
 
     fetch(SCRIPT_URL, {
@@ -290,6 +459,70 @@ function setupCreateModal() {
             e.preventDefault();
             createTicket();
         };
+
+        // --- Auto-Category Logic for Create Modal ---
+        const subjectSelect = document.getElementById('createSubject');
+        const categorySelect = document.getElementById('createCategory');
+        
+        if (subjectSelect && categorySelect) {
+            subjectSelect.addEventListener('change', function() {
+                const selectedSubject = subjectSelect.value;
+                
+                // Show/Hide Other Subject input
+                const subjectOther = document.getElementById('createSubjectOther');
+                if (subjectOther) {
+                    if (selectedSubject === 'General Inquiry/Others') {
+                        subjectOther.classList.remove('hidden');
+                        subjectOther.required = true;
+                    } else {
+                        subjectOther.classList.add('hidden');
+                        subjectOther.required = false;
+                        subjectOther.value = '';
+                    }
+                }
+
+                const mappedCategory = subjectToCategoryMap[selectedSubject];
+                if (mappedCategory) {
+                    categorySelect.value = (mappedCategory === 'Others' ? 'Other' : mappedCategory);
+                    categorySelect.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        // Show/Hide Other Category input
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function() {
+                const categoryOther = document.getElementById('createCategoryOther');
+                if (categoryOther) {
+                    if (categorySelect.value === 'Other') {
+                        categoryOther.classList.remove('hidden');
+                        categoryOther.required = true;
+                    } else {
+                        categoryOther.classList.add('hidden');
+                        categoryOther.required = false;
+                        categoryOther.value = '';
+                    }
+                }
+            });
+        }
+
+        // Show/Hide Other Ticket Type input
+        const typeSelect = document.getElementById('createTicketType');
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function() {
+                const typeOther = document.getElementById('createTicketTypeOther');
+                if (typeOther) {
+                    if (typeSelect.value === 'Other') {
+                        typeOther.classList.remove('hidden');
+                        typeOther.required = true;
+                    } else {
+                        typeOther.classList.add('hidden');
+                        typeOther.required = false;
+                        typeOther.value = '';
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -303,6 +536,15 @@ function openCreateModal() {
     if (prio) prio.value = '';
     if (cat) cat.value = '';
     if (type) type.value = '';
+
+    // Hide Other inputs
+    const subjectOther = document.getElementById('createSubjectOther');
+    const categoryOther = document.getElementById('createCategoryOther');
+    const typeOther = document.getElementById('createTicketTypeOther');
+    if (subjectOther) subjectOther.classList.add('hidden');
+    if (categoryOther) categoryOther.classList.add('hidden');
+    if (typeOther) typeOther.classList.add('hidden');
+
     document.getElementById('createModal').style.display = 'flex';
 }
 
@@ -326,14 +568,24 @@ function createTicket() {
     saveBtn.disabled = true;
     showSyncModal(); // Show sync modal
 
+    // Helper function to get value (dropdown or text input if 'Others' is selected)
+    const getValue = (selectId, otherId) => {
+        const select = document.getElementById(selectId);
+        const other = document.getElementById(otherId);
+        if (select && (select.value === 'Other' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
+            return other.value.trim();
+        }
+        return select ? select.value : '';
+    };
+
     const formData = {
         action: 'createTicket',
-        subject: document.getElementById('createSubject').value,
+        subject: getValue('createSubject', 'createSubjectOther'),
         description: document.getElementById('createDescription').value,
         requesterName: document.getElementById('createRequester').value,
         department: document.getElementById('createDepartment').value,
         priority: document.getElementById('createPriority').value,
-        category: document.getElementById('createCategory').value,
+        category: getValue('createCategory', 'createCategoryOther'),
         ticketType: document.getElementById('createTicketType').value
     };
 
