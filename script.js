@@ -56,9 +56,47 @@ document.addEventListener('DOMContentLoaded', function() {
   var SCRIPT_URL = window.APP_CONFIG && window.APP_CONFIG.SCRIPT_URL ? window.APP_CONFIG.SCRIPT_URL : '';
   
   if (form) {
+    // --- Dynamic Settings Load ---
+    const CATEGORIES_KEY = 'ticketing_categories';
+    const TICKET_TYPES_KEY = 'ticketing_ticket_types';
+    const DEFAULT_CATEGORIES = ['Hardware', 'Software', 'Network', 'Access/Login', 'Others'];
+    const DEFAULT_TICKET_TYPES = ['Incident', 'Request', 'Inquiry', 'Others'];
+
+    const categorySelect = document.getElementById('category');
+    const ticketTypeSelect = document.getElementById('ticketType');
+
+    if (categorySelect) {
+      let categories = [];
+      try {
+        categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY)) || DEFAULT_CATEGORIES;
+      } catch(e) {
+        categories = DEFAULT_CATEGORIES;
+      }
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    if (ticketTypeSelect) {
+      let ticketTypes = [];
+      try {
+        ticketTypes = JSON.parse(localStorage.getItem(TICKET_TYPES_KEY)) || DEFAULT_TICKET_TYPES;
+      } catch(e) {
+        ticketTypes = DEFAULT_TICKET_TYPES;
+      }
+      ticketTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        ticketTypeSelect.appendChild(option);
+      });
+    }
+
     // --- Auto-Category Logic ---
     const subjectSelect = document.getElementById('subject');
-    const categorySelect = document.getElementById('category');
 
     const subjectToCategoryMap = {
       'Hardware Repair/Issue': 'Hardware',
@@ -133,7 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Show/Hide Other Ticket Type input
-    const ticketTypeSelect = document.getElementById('ticketType');
     if (ticketTypeSelect) {
       ticketTypeSelect.addEventListener('change', function() {
         const ticketTypeOther = document.getElementById('ticketTypeOther');

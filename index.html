@@ -94,11 +94,7 @@
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5" for="category">Category</label>
           <select id="category" name="category" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white outline-none transition-all duration-200">
             <option value="" disabled selected>Select Category</option>
-            <option value="Hardware">Hardware</option>
-            <option value="Software">Software</option>
-            <option value="Network">Network</option>
-            <option value="Access/Login">Access/Login</option>
-            <option value="Others">Others</option>
+            <!-- Options dynamically loaded from JS -->
           </select>
           <input type="text" id="categoryOther" name="categoryOther" class="hidden mt-2 w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white outline-none transition-all duration-200" placeholder="Please specify category">
         </div>
@@ -108,10 +104,7 @@
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5" for="ticketType">Ticket Type</label>
           <select id="ticketType" name="ticketType" required class="w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white outline-none transition-all duration-200">
             <option value="" disabled selected>Select Ticket Type</option>
-            <option value="Incident">Incident</option>
-            <option value="Request">Request</option>
-            <option value="Inquiry">Inquiry</option>
-            <option value="Others">Others</option>
+            <!-- Options dynamically loaded from JS -->
           </select>
           <input type="text" id="ticketTypeOther" name="ticketTypeOther" class="hidden mt-2 w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 dark:text-white outline-none transition-all duration-200" placeholder="Please specify ticket type">
         </div>

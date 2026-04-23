@@ -70,6 +70,50 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = 'index.html';
         });
     }
+
+    // --- Dynamic Settings Load ---
+    const CATEGORIES_KEY = 'ticketing_categories';
+    const TICKET_TYPES_KEY = 'ticketing_ticket_types';
+    const DEFAULT_CATEGORIES = ['Hardware', 'Software', 'Network', 'Access/Login', 'Others'];
+    const DEFAULT_TICKET_TYPES = ['Incident', 'Request', 'Inquiry', 'Others'];
+
+    let categories = [];
+    try {
+        categories = JSON.parse(localStorage.getItem(CATEGORIES_KEY)) || DEFAULT_CATEGORIES;
+    } catch(e) {
+        categories = DEFAULT_CATEGORIES;
+    }
+
+    let ticketTypes = [];
+    try {
+        ticketTypes = JSON.parse(localStorage.getItem(TICKET_TYPES_KEY)) || DEFAULT_TICKET_TYPES;
+    } catch(e) {
+        ticketTypes = DEFAULT_TICKET_TYPES;
+    }
+
+    const categorySelects = [document.getElementById('editCategory'), document.getElementById('createCategory')];
+    categorySelects.forEach(select => {
+        if (select) {
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+        }
+    });
+
+    const ticketTypeSelects = [document.getElementById('editTicketType'), document.getElementById('createTicketType')];
+    ticketTypeSelects.forEach(select => {
+        if (select) {
+            ticketTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                select.appendChild(option);
+            });
+        }
+    });
 });
 
 let allTickets = []; // Store fetched tickets
@@ -280,7 +324,7 @@ function setupEditModal() {
 
                 const mappedCategory = subjectToCategoryMap[selectedSubject];
                 if (mappedCategory) {
-                    categorySelect.value = (mappedCategory === 'Others' ? 'Other' : mappedCategory);
+                    categorySelect.value = (mappedCategory === 'Others' ? 'Others' : mappedCategory);
                     categorySelect.dispatchEvent(new Event('change'));
                 }
             });
@@ -291,7 +335,7 @@ function setupEditModal() {
             categorySelect.addEventListener('change', function() {
                 const categoryOther = document.getElementById('editCategoryOther');
                 if (categoryOther) {
-                    if (categorySelect.value === 'Other') {
+                    if (categorySelect.value === 'Others') {
                         categoryOther.classList.remove('hidden');
                         categoryOther.required = true;
                     } else {
@@ -309,7 +353,7 @@ function setupEditModal() {
             typeSelect.addEventListener('change', function() {
                 const typeOther = document.getElementById('editTicketTypeOther');
                 if (typeOther) {
-                    if (typeSelect.value === 'Other') {
+                    if (typeSelect.value === 'Others') {
                         typeOther.classList.remove('hidden');
                         typeOther.required = true;
                     } else {
@@ -344,7 +388,7 @@ function openEditModal(id) {
     // Populate fields
     document.getElementById('editId').value = ticket.id;
     
-    // Helper to set select and handle 'Other'
+    // Helper to set select and handle 'Others'
     const setSelectValue = (selectId, otherId, value, options) => {
         const select = document.getElementById(selectId);
         const other = document.getElementById(otherId);
@@ -358,7 +402,7 @@ function openEditModal(id) {
             }
         } else if (value) {
             // If value is not in options, set to 'Others' and show text input
-            const otherValue = selectId.includes('Subject') ? 'General Inquiry/Others' : 'Other';
+            const otherValue = selectId.includes('Subject') ? 'General Inquiry/Others' : 'Others';
             select.value = otherValue;
             if (other) {
                 other.classList.remove('hidden');
@@ -403,7 +447,7 @@ function saveTicket() {
     const getValue = (selectId, otherId) => {
         const select = document.getElementById(selectId);
         const other = document.getElementById(otherId);
-        if (select && (select.value === 'Other' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
+        if (select && (select.value === 'Others' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
             return other.value.trim();
         }
         return select ? select.value : '';
@@ -483,7 +527,7 @@ function setupCreateModal() {
 
                 const mappedCategory = subjectToCategoryMap[selectedSubject];
                 if (mappedCategory) {
-                    categorySelect.value = (mappedCategory === 'Others' ? 'Other' : mappedCategory);
+                    categorySelect.value = (mappedCategory === 'Others' ? 'Others' : mappedCategory);
                     categorySelect.dispatchEvent(new Event('change'));
                 }
             });
@@ -494,7 +538,7 @@ function setupCreateModal() {
             categorySelect.addEventListener('change', function() {
                 const categoryOther = document.getElementById('createCategoryOther');
                 if (categoryOther) {
-                    if (categorySelect.value === 'Other') {
+                    if (categorySelect.value === 'Others') {
                         categoryOther.classList.remove('hidden');
                         categoryOther.required = true;
                     } else {
@@ -512,7 +556,7 @@ function setupCreateModal() {
             typeSelect.addEventListener('change', function() {
                 const typeOther = document.getElementById('createTicketTypeOther');
                 if (typeOther) {
-                    if (typeSelect.value === 'Other') {
+                    if (typeSelect.value === 'Others') {
                         typeOther.classList.remove('hidden');
                         typeOther.required = true;
                     } else {
@@ -572,7 +616,7 @@ function createTicket() {
     const getValue = (selectId, otherId) => {
         const select = document.getElementById(selectId);
         const other = document.getElementById(otherId);
-        if (select && (select.value === 'Other' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
+        if (select && (select.value === 'Others' || select.value === 'General Inquiry/Others') && other && other.value.trim()) {
             return other.value.trim();
         }
         return select ? select.value : '';
